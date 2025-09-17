@@ -1,18 +1,23 @@
-name: RSOLV Security Workflow
+name: RSOLV Three-Phase Security Workflow
 
 on:
   workflow_dispatch:
     inputs:
       mode:
-        description: 'Mode: scan, validate, mitigate, or full'
+        description: 'Operation mode: scan (detect + create issues), validate (enrich issues), mitigate (generate fixes), or full (all phases)'
         required: false
-        default: 'full'
+        default: 'scan'
         type: choice
         options:
         - scan
         - validate
         - mitigate
         - full
+      demo_mode:
+        description: 'Enable demo mode (auto-labels issues for immediate processing)'
+        required: false
+        default: true
+        type: boolean
   push:
     branches: [ main ]
   pull_request:
@@ -30,14 +35,24 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Run RSOLV Action
+      - name: Run RSOLV Three-Phase Workflow
         uses: rsolv-dev/rsolv-action@main
         with:
+          # Core Configuration
           rsolvApiKey: ${{ secrets.RSOLV_API_KEY }}
-          mode: ${{ github.event.inputs.mode || 'full' }}
+          mode: ${{ github.event.inputs.mode || 'scan' }}
+          scan_mode: 'scan'  # Enable issue creation during scan phase
+
+          # Security Analysis Configuration
           enable_security_analysis: 'true'
           enable_ast_validation: 'true'
+
+          # Fix Generation Configuration
           use_git_based_editing: 'true'
           use_structured_phases: 'true'
+          enable_educational_pr: 'true'
+
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Demo mode auto-labels issues with rsolv:automate for immediate processing
+          RSOLV_DEMO_MODE: ${{ github.event.inputs.demo_mode || 'true' }}
