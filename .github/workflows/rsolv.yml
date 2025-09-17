@@ -1,0 +1,43 @@
+name: RSOLV Security Workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Mode: scan, validate, mitigate, or full'
+        required: false
+        default: 'full'
+        type: choice
+        options:
+        - scan
+        - validate
+        - mitigate
+        - full
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  rsolv-security:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run RSOLV Action
+        uses: rsolv-dev/rsolv-action@main
+        with:
+          rsolvApiKey: ${{ secrets.RSOLV_API_KEY }}
+          mode: ${{ github.event.inputs.mode || 'full' }}
+          enable_security_analysis: 'true'
+          enable_ast_validation: 'true'
+          use_git_based_editing: 'true'
+          use_structured_phases: 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

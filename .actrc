@@ -1,0 +1,7 @@
+-P ubuntu-latest=catthehacker/ubuntu:act-latest
+--secret RSOLV_API_KEY=rsolv_-1U3PpIl2T3wo3Nw5v9wB1EM-riNnBcloKtq_gveimc
+--secret GITHUB_TOKEN=ghp_demo_token
+--env GITHUB_REPOSITORY=demo/rsolv-demo-vulnerable
+--env GITHUB_REF=refs/heads/main
+--env GITHUB_WORKSPACE=/workspace
+--env RSOLV_API_URL=https://api.rsolv.dev
