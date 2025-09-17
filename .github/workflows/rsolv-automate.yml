@@ -37,6 +37,6 @@ jobs:
           use_git_based_editing: 'true'
           use_structured_phases: 'true'
           enable_educational_pr: 'true'
-          disable_fix_validation: 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DISABLE_FIX_VALIDATION: 'true'
