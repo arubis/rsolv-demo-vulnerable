@@ -36,6 +36,6 @@ jobs:
           enable_ast_validation: 'true'
           use_git_based_editing: 'true'
           use_structured_phases: 'true'
-          createPR: 'true'
+          enable_educational_pr: 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
