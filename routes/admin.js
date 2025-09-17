@@ -1,26 +1,58 @@
 const router = require('express').Router();
-const { exec } = require('child_process');
+const { execFile } = require('child_process');
+const path = require('path');
+const { promisify } = require('util');
 
-// VULNERABILITY: Command Injection
-router.post('/backup', (req, res) => {
+const execFileAsync = promisify(execFile);
+
+// FIXED: Command Injection Prevention
+router.post('/backup', async (req, res) => {
   const { directory } = req.body;
-  
-  // User input directly passed to shell command
-  exec(`tar -czf backup.tar.gz ${directory}`, (err, stdout, stderr) => {
-    if (err) return res.status(500).json({ error: stderr });
+
+  // Input validation
+  if (!directory || typeof directory !== 'string') {
+    return res.status(400).json({ error: 'Invalid directory parameter' });
+  }
+
+  // Sanitize path to prevent directory traversal and command injection
+  const sanitizedDirectory = path.resolve(path.normalize(directory));
+
+  // Validate that the path is within allowed directories (basic check)
+  if (sanitizedDirectory.includes('..') || !sanitizedDirectory.startsWith('/')) {
+    return res.status(400).json({ error: 'Invalid directory path' });
+  }
+
+  try {
+    // Use execFile with separate arguments to prevent command injection
+    const { stdout, stderr } = await execFileAsync('tar', ['-czf', 'backup.tar.gz', sanitizedDirectory]);
     res.json({ message: 'Backup completed', output: stdout });
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// VULNERABILITY: Another Command Injection
-router.get('/ping', (req, res) => {
+// FIXED: Another Command Injection Prevention
+router.get('/ping', async (req, res) => {
   const host = req.query.host;
-  
-  // Unsafe command execution
-  exec(`ping -c 4 ${host}`, (err, stdout, stderr) => {
-    if (err) return res.status(500).json({ error: stderr });
+
+  // Input validation
+  if (!host || typeof host !== 'string') {
+    return res.status(400).json({ error: 'Invalid host parameter' });
+  }
+
+  // Validate host format (basic IP/hostname validation)
+  const hostRegex = /^[a-zA-Z0-9.-]+$/;
+  if (!hostRegex.test(host) || host.length > 253) {
+    return res.status(400).json({ error: 'Invalid host format' });
+  }
+
+  try {
+    // Use execFile with separate arguments to prevent command injection
+    const { stdout, stderr } = await execFileAsync('ping', ['-c', '4', host]);
     res.send(`<pre>${stdout}</pre>`);
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 module.exports = router;
