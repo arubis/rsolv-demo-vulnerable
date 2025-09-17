@@ -10,12 +10,15 @@ app.set('view engine', 'ejs');
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// VULNERABILITY: Hardcoded database credentials
+// FIXED: Hardcoded credentials - Using environment variables
 const dbConfig = {
-  host: 'localhost',
-  user: 'root',
-  password: 'admin123',  // Hardcoded password
-  database: 'demo_db'
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || (() => {
+    console.error('WARNING: DB_PASSWORD environment variable not set');
+    return '';
+  })(),
+  database: process.env.DB_NAME || 'demo_db'
 };
 
 const db = mysql.createConnection(dbConfig);
